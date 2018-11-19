@@ -1,17 +1,24 @@
 import * as esprima from 'esprima';
 let parseInfo=[];
 let line=1;
+let typeToHandlerMapping=new Map();
+
+
 const parseCode = (codeToParse) => {
     parseInfo=[];
     line=1;
+
     let ans=esprima.parseScript(codeToParse);
 
+    initiateMap();
     createParseInfo(ans);
     addToTable();
     return ans;
 };
 
 export {parseCode};
+export {parseInfo};
+
 
 
 function createParseInfo(parsedCode){
@@ -21,6 +28,9 @@ function createParseInfo(parsedCode){
 
 function addToTable() {
     var table = document.getElementById('resultsTable');
+    table.innerHTML = '<tr>\n' +
+        '                <th>Line</th>\n' +'<th>Type</th>\n' + '<th>Name</th>\n' + '<th>Condition</th>\n' + '<th>Value</th>\n' +
+        '            </tr>';
     for(let i=0;i<parseInfo.length;i++){
         var row = table.insertRow(i+1);
         var line = row.insertCell(0);
@@ -65,6 +75,13 @@ function functionCode(parseBody) {
     }
 }
 
+function handleItem(item) {
+    let type=item.type;
+    let func = typeToHandlerMapping[type];
+    func.call(undefined,item);
+
+}
+
 function handleReturn(body) {
     let value='';
     if(body.argument.type==('UnaryExpression')) {
@@ -86,11 +103,13 @@ function handleReturn(body) {
     line++;
 }
 
-function handleIf(body, statement) {
+function handleIf(body,type) {
     let condition=getBinaryExp(body.test);
+    if(type == null)
+        type='if statement';
     parseInfo.push({
         'Line':line,
-        'Type':statement,
+        'Type':type,
         'Name':'',
         'Condition':condition,
         'Value':''
@@ -103,9 +122,7 @@ function handleIf(body, statement) {
     else
         handleItem(consequents);
     //else
-    handleElse(body.alternate);
-
-}
+    handleElse(body.alternate);}
 
 function handleElse(alternate) {
     if(alternate.type=='IfStatement')
@@ -125,28 +142,6 @@ function handleElse(alternate) {
             handleItem(alternate);
     }
 
-}
-
-function handleItem(item) {
-    let type=item.type;
-    if(type==('VariableDeclaration'))
-        handleVarDec(item);
-    else if(type==('ExpressionStatement'))
-        handleExpression(item);
-    else if(type==('IfStatement'))
-        handleIf(item, 'if statement');
-    else if(type==('ReturnStatement'))
-        handleReturn(item);
-    else
-        handleWhileOrFor(item);
-}
-
-function handleWhileOrFor(item) {
-    let type=item.type;
-    if(type==('WhileStatement'))
-        handleWhile(item);
-    if(type==('ForStatement'))
-        handleFor(item);
 }
 
 function handleWhile(body) {
@@ -179,6 +174,12 @@ function getValue(value) {
 function getBinaryExp(test) {
     let left=test.left;
     let right=test.right;
+    left=binaryOneSide(left);
+    right=binaryOneSide(right);
+
+    return left+''+test.operator+''+right;}
+
+function binaryOneSide(left) {
     if(left.type==('BinaryExpression'))
         left='('+getBinaryExp(left)+')';
     else if (left.type==('Identifier'))
@@ -187,15 +188,18 @@ function getBinaryExp(test) {
         left=left.value;
     else if(left.type==('MemberExpression'))
         left=left.object.name+'['+getValue(left.property)+']';
-    if(right.type==('BinaryExpression'))
-        right='('+getBinaryExp(right)+')';
-    else if (right.type==('Identifier'))
-        right=right.name;
-    else if(right.type==('Literal'))
-        right=right.value;
-    else if(right.type==('MemberExpression'))
-        right=right.object.name+'['+getValue(right.property)+']';
-    return left+''+test.operator+''+right;}
+    return left;
+}
+
+function initiateMap() {
+    typeToHandlerMapping=new Map();
+    typeToHandlerMapping['VariableDeclaration']=handleVarDec;
+    typeToHandlerMapping['ExpressionStatement']=handleExpression;
+    typeToHandlerMapping['IfStatement']=handleIf;
+    typeToHandlerMapping['ReturnStatement']=handleReturn;
+    typeToHandlerMapping['WhileStatement']=handleWhile;
+    typeToHandlerMapping['ForStatement']=handleFor;
+}
 
 //assignment
 function handleExpression(body) {
@@ -219,7 +223,7 @@ function handleVarDec(body) {
     {
         let curr=body.declarations[i];
         let name=curr.id.name;
-        let value=curr.init;
+        let value=getValue(curr.init);
         if(value==null)
             value='null(or nothing)';
         parseInfo.push({
@@ -230,6 +234,21 @@ function handleVarDec(body) {
             'Value':value
         });
     }
-
     line++;
+}
+
+function handleFor(body) {
+    //for head
+    let condition=body.init.declarations[0].id.name+'='+getValue(body.init.declarations[0].init);
+    condition=condition+';'+getBinaryExp(body.test)+';'+body.update.argument.name+body.update.operator;
+    parseInfo.push({
+        'Line':line,
+        'Type':'for statement',
+        'Name':'',
+        'Condition':condition,
+        'Value':''
+    });
+    line++;
+    functionCode(body.body.body);
+
 }

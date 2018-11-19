@@ -1,5 +1,5 @@
 import assert from 'assert';
-import {parseCode} from '../src/js/code-analyzer';
+import {parseCode,parseInfo} from '../src/js/code-analyzer';
 
 describe('The javascript parser', () => {
     it('is parsing an empty function correctly', () => {
@@ -16,3 +16,15 @@ describe('The javascript parser', () => {
         );
     });
 });
+//
+// describe('save info and create table',()=>{
+//     it('empty function - only func decleration', ()=>{
+//         parseCode('function x(){}');
+//         let expRes=[{'Line':'1',
+//             'Type':'function declaration',
+//             'Name':'x',
+//             'Condition':'',
+//             'Value':''}];
+//         assert.deepEqual(expRes,parseInfo);
+//     });
+// });

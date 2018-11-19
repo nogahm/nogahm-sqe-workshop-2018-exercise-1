@@ -2,13 +2,6 @@ import assert from 'assert';
 import {app} from '../src/js/app';
 
 describe('The javascript app', () => {
-    it('is returning right string to an expretion', () => {
-        assert.equal(
-            JSON.stringify(getValue('')),
-            '{"type":"Program","body":[],"sourceType":"script"}'
-        );
-    });
-
 
     it('is parsing an empty function correctly', () => {
         assert.equal(
