@@ -1,5 +1,5 @@
 import $ from 'jquery';
-import {parseCode} from './code-analyzer';
+import {addToTable, createParseInfo, parseCode} from './code-analyzer';
 
 
 $(document).ready(function () {
@@ -8,6 +8,9 @@ $(document).ready(function () {
         let codeToParse = $('#codePlaceholder').val();
         let parsedCode = parseCode(codeToParse);
         $('#parsedCode').val(JSON.stringify(parsedCode, null, 2));
+
+        createParseInfo(parsedCode);
+        addToTable();
     });
 
 });
