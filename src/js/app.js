@@ -1,5 +1,5 @@
 import $ from 'jquery';
-import {addToTable, createParseInfo, parseCode} from './code-analyzer';
+import {createParseInfo, parseCode, parseInfo, table} from './code-analyzer';
 
 
 $(document).ready(function () {
@@ -15,9 +15,22 @@ $(document).ready(function () {
 
 });
 
-// function binarySearch(X, V, n){
-//     for(let i=0;i<a+b;i++)
-//     {
-//         let x=8;
-//     }
-// }
+function addToTable() {
+    let table = document.getElementById('resultsTable');
+    table.innerHTML = '<tr>\n' +
+        '                <th>Line</th>\n' +'<th>Type</th>\n' + '<th>Name</th>\n' + '<th>Condition</th>\n' + '<th>Value</th>\n' +
+        '            </tr>';
+    for(let i=0;i<parseInfo.length;i++){
+        var row = table.insertRow(i+1);
+        var line = row.insertCell(0);
+        var type = row.insertCell(1);
+        var name = row.insertCell(2);
+        var condition = row.insertCell(3);
+        var value = row.insertCell(4);
+        line.innerHTML = parseInfo[i].Line;
+        type.innerHTML = parseInfo[i].Type;
+        name.innerHTML = parseInfo[i].Name;
+        condition.innerHTML = parseInfo[i].Condition;
+        value.innerHTML = parseInfo[i].Value;
+    }
+}

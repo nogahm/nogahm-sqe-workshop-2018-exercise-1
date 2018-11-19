@@ -3,7 +3,6 @@ let parseInfo=[];
 let line=1;
 let typeToHandlerMapping=new Map();
 
-
 const parseCode = (codeToParse) => {
     parseInfo=[];
     line=1;
@@ -16,36 +15,14 @@ const parseCode = (codeToParse) => {
 export {parseCode};
 export {parseInfo};
 export {createParseInfo};
-export {addToTable};
 export {functionCode};
 
 
-
+//checked
 function createParseInfo(parsedCode){
     if(parsedCode.body.length>0){
         funcHeader(parsedCode);
         functionCode((parsedCode.body)[0].body.body);
-    }
-
-}
-
-function addToTable() {
-    var table = document.getElementById('resultsTable');
-    table.innerHTML = '<tr>\n' +
-        '                <th>Line</th>\n' +'<th>Type</th>\n' + '<th>Name</th>\n' + '<th>Condition</th>\n' + '<th>Value</th>\n' +
-        '            </tr>';
-    for(let i=0;i<parseInfo.length;i++){
-        var row = table.insertRow(i+1);
-        var line = row.insertCell(0);
-        var type = row.insertCell(1);
-        var name = row.insertCell(2);
-        var condition = row.insertCell(3);
-        var value = row.insertCell(4);
-        line.innerHTML = parseInfo[i].Line;
-        type.innerHTML = parseInfo[i].Type;
-        name.innerHTML = parseInfo[i].Name;
-        condition.innerHTML = parseInfo[i].Condition;
-        value.innerHTML = parseInfo[i].Value;
     }
 }
 
@@ -78,20 +55,11 @@ function handleItem(item) {
     let type=item.type;
     let func = typeToHandlerMapping[type];
     func.call(undefined,item);
-
 }
 
+//checked
 function handleReturn(body) {
-    let value='';
-    if(body.argument.type==('UnaryExpression')) {
-        value=body.argument.operator+''+body.argument.argument.value;
-    }
-    else if(body.argument.type==('BinaryExpression')) {
-        value=getBinaryExp(body.argument);
-    }
-    else if(body.argument.type==('Identifier')) {
-        value=body.argument.name;
-    }
+    let value=getValue(body.argument);
     parseInfo.push({
         'Line':line,
         'Type':'return statement',
@@ -102,6 +70,7 @@ function handleReturn(body) {
     line++;
 }
 
+//checked
 function handleIf(body,type) {
     let condition=getBinaryExp(body.test);
     if(type == null)
@@ -137,13 +106,14 @@ function handleElse(alternate) {
         });
         line++;
         if(alternate.type=='BlockStatement')
-            functionCode(alternate);
+            functionCode(alternate.body);
         else
             handleItem(alternate);
     }
 
 }
 
+//checked
 function handleWhile(body) {
     //while header
     let condition=getBinaryExp(body.test);
@@ -168,6 +138,8 @@ function getValue(value) {
         return value.name;
     else if(value.type==('Literal'))
         return value.value;
+    else if(value.type=='UnaryExpression')
+        return value.operator+''+value.argument.value;
 }
 
 //find expression to string - checked - ??
@@ -201,24 +173,44 @@ function initiateMap() {
     typeToHandlerMapping['ReturnStatement']=handleReturn;
     typeToHandlerMapping['WhileStatement']=handleWhile;
     typeToHandlerMapping['ForStatement']=handleFor;
+    typeToHandlerMapping['AssignmentExpression']=handleAss;
+    typeToHandlerMapping['UpdateExpression']=handleUpdate;
 }
 
 //assignment - checked
 function handleExpression(body) {
-    if(body.expression.type==('AssignmentExpression')) {
-        let name=body.expression.left.name;
-        let value=body.expression.right;
-        //get value if it is binary expresion
-        value=getValue(value);
-        parseInfo.push({
-            'Line':line,
-            'Type':'assignment expression',
-            'Name':name,
-            'Condition':'',
-            'Value':value
-        });
-    }
-    line++;}
+    let type=body.expression.type;
+    let func = typeToHandlerMapping[type];
+    func.call(undefined,body.expression);
+    line++;
+}
+
+function handleAss(body) {
+    let name=body.left.name;
+    let value=body.right;
+    //get value if it is binary expresion
+    value=getValue(value);
+    parseInfo.push({
+        'Line':line,
+        'Type':'assignment expression',
+        'Name':name,
+        'Condition':'',
+        'Value':value
+    });
+}
+
+function handleUpdate(body) {
+    let name=body.argument.name;
+    let operator=body.operator;
+    parseInfo.push({
+        'Line':line,
+        'Type':'update expression',
+        'Name':name,
+        'Condition':'',
+        'Value':name+''+operator
+    });
+
+}
 
 //checked
 function handleVarDec(body) {
@@ -226,9 +218,9 @@ function handleVarDec(body) {
     {
         let curr=body.declarations[i];
         let name=curr.id.name;
-        let value=getValue(curr.init);
-        if(value==null)
-            value='null(or nothing)';
+        let value='null(or nothing)';
+        if(curr.init!=null)
+            value=getValue(curr.init);
         parseInfo.push({
             'Line':line,
             'Type':'variable declaration',
