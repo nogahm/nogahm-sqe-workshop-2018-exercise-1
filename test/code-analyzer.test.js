@@ -1,5 +1,5 @@
 import assert from 'assert';
-import {parseCode, parseInfo, createParseInfo, functionCode, table, addToTable} from '../src/js/code-analyzer';
+import {parseCode, parseInfo, createParseInfo, functionCode} from '../src/js/code-analyzer';
 
 describe('The javascript parser', () => {
     it('is parsing an empty function correctly', () => {
