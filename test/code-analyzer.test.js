@@ -29,6 +29,12 @@ describe('save info and create table',()=>{
         assert.deepEqual(expRes,parseInfo);
     });
 
+    it('code with no func decleration', ()=>{
+        let text=parseCode('let x;');
+        let msg=createParseInfo(text);
+        assert.deepEqual('Illigal input',msg);
+    });
+
     it('variable decleration with assignment', ()=>{
         let ans=parseCode('let x=8;');
         functionCode(ans.body);

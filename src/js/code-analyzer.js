@@ -20,9 +20,12 @@ export {functionCode};
 
 //checked
 function createParseInfo(parsedCode){
-    if(parsedCode.body.length>0){
+    try{
         funcHeader(parsedCode);
         functionCode((parsedCode.body)[0].body.body);
+    }
+    catch (e) {
+        return 'Illigal input';
     }
 }
 
@@ -132,14 +135,36 @@ function handleWhile(body) {
 
 //return string of an item - checked - ??
 function getValue(value) {
-    if(value.type==('BinaryExpression'))
-        return getBinaryExp(value);
-    else if(value.type==('Identifier'))
-        return value.name;
-    else if(value.type==('Literal'))
-        return value.value;
-    else if(value.type=='UnaryExpression')
-        return value.operator+''+value.argument.value;
+    // if(value.type==('BinaryExpression'))
+    //     return getBinaryExp(value);
+    // else if(value.type==('Identifier'))
+    //     return value.name;
+    // else if(value.type==('Literal'))
+    //     return value.value;
+    // else if(value.type=='UnaryExpression')
+    //     return value.operator+''+value.argument.value;
+    let func = typeToHandlerMapping[value.type];
+    return func.call(undefined,value);
+}
+
+function BinaryExpression(value)
+{
+    return getBinaryExp(value);
+}
+
+function Identifier(value)
+{
+    return value.name;
+}
+
+function Literal(value)
+{
+    return value.value;
+}
+
+function UnaryExpression(value)
+{
+    return value.operator+''+value.argument.value;
 }
 
 //find expression to string - checked - ??
@@ -154,15 +179,18 @@ function getBinaryExp(test) {
 
 //checked - ??
 function binaryOneSide(left) {
+    let func = typeToHandlerMapping[left.type];
+    let temp= func.call(undefined,left);
     if(left.type==('BinaryExpression'))
-        left='('+getBinaryExp(left)+')';
-    else if (left.type==('Identifier'))
-        left=left.name;
-    else if(left.type==('Literal'))
-        left=left.value;
-    else if(left.type==('MemberExpression'))
-        left=left.object.name+'['+getValue(left.property)+']';
+        left='('+temp+')';
+    else
+        left=temp;
     return left;
+}
+
+function MemberExpression(value)
+{
+    return value.object.name+'['+getValue(value.property)+']';
 }
 
 function initiateMap() {
@@ -175,6 +203,12 @@ function initiateMap() {
     typeToHandlerMapping['ForStatement']=handleFor;
     typeToHandlerMapping['AssignmentExpression']=handleAss;
     typeToHandlerMapping['UpdateExpression']=handleUpdate;
+
+    typeToHandlerMapping['BinaryExpression']=BinaryExpression;
+    typeToHandlerMapping['Identifier']=Identifier;
+    typeToHandlerMapping['Literal']=Literal;
+    typeToHandlerMapping['UnaryExpression']=UnaryExpression;
+    typeToHandlerMapping['MemberExpression']=MemberExpression;
 }
 
 //assignment - checked
