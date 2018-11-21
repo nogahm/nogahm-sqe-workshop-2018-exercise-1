@@ -1,5 +1,5 @@
 import $ from 'jquery';
-import {createParseInfo, parseCode, parseInfo, table} from './code-analyzer';
+import {createParseInfo, parseCode, parseInfo} from './code-analyzer';
 
 
 $(document).ready(function () {
@@ -30,7 +30,7 @@ function addToTable() {
         line.innerHTML = parseInfo[i].Line;
         type.innerHTML = parseInfo[i].Type;
         name.innerHTML = parseInfo[i].Name;
-        condition.innerHTML = parseInfo[i].Condition;
+        condition.innerHTML = parseInfo[i].Condition.replace(/</g,'&lt;').replace(/>/g,'&gt;');
         value.innerHTML = parseInfo[i].Value;
     }
 }
